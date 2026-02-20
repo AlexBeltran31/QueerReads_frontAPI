@@ -1,10 +1,11 @@
 import Router from './router'
+import { AuthProvider } from '../context/AuthContext'
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <AuthProvider>
       <Router />
-    </div>
+    </AuthProvider>
   )
 }
 

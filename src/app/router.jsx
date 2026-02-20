@@ -1,24 +1,30 @@
 import { Routes, Route } from 'react-router-dom'
 import Layout from '../components/layout/Layout'
+import ProtectedRoute from '../components/common/ProtectedRoute'
+import AdminRoute from '../components/common/AdminRoute'
 
 function Router() {
   return (
     <Routes>
       <Route element={<Layout />}>
-        {/* Public routes */}
+        {/* Public */}
         <Route path="/" element={<div>Home</div>} />
         <Route path="/login" element={<div>Login</div>} />
         <Route path="/register" element={<div>Register</div>} />
         <Route path="/books/:id" element={<div>Book Detail</div>} />
         <Route path="/categories" element={<div>Categories</div>} />
 
-        {/* Protected routes */}
-        <Route path="/reading-list" element={<div>Reading List</div>} />
-        <Route path="/profile" element={<div>Profile</div>} />
-        <Route path="/random" element={<div>Random Suggestion</div>} />
+        {/* Protected */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/reading-list" element={<div>Reading List</div>} />
+          <Route path="/profile" element={<div>Profile</div>} />
+          <Route path="/random" element={<div>Random Suggestion</div>} />
+        </Route>
 
         {/* Admin */}
-        <Route path="/admin" element={<div>Admin Dashboard</div>} />
+        <Route element={<AdminRoute />}>
+          <Route path="/admin" element={<div>Admin Dashboard</div>} />
+        </Route>
 
         <Route path="*" element={<div>Not Found</div>} />
       </Route>
