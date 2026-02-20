@@ -4,11 +4,17 @@ import {
   useMutation,
   useQueryClient,
 } from '@tanstack/react-query'
+import { useState } from 'react'
 import axiosClient from '../../api/axiosClient'
+import { useAuth } from '../../context/AuthContext'
 
 function BookDetailPage() {
   const { id } = useParams()
   const queryClient = useQueryClient()
+  const { user } = useAuth()
+
+  const [rating, setRating] = useState(5)
+  const [comment, setComment] = useState('')
 
   // 📖 Fetch Book
   const {
@@ -24,7 +30,7 @@ function BookDetailPage() {
     },
   })
 
-  // ⭐ Fetch Reviews (Public)
+  // ⭐ Fetch Reviews
   const {
     data: reviews,
     isLoading: reviewsLoading,
@@ -47,6 +53,22 @@ function BookDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['readingList'],
+      })
+    },
+  })
+
+  // ✍️ Add Review
+  const addReviewMutation = useMutation({
+    mutationFn: async () => {
+      await axiosClient.post(`/books/${id}/reviews`, {
+        rating,
+        comment,
+      })
+    },
+    onSuccess: () => {
+      setComment('')
+      queryClient.invalidateQueries({
+        queryKey: ['reviews', id],
       })
     },
   })
@@ -76,7 +98,7 @@ function BookDetailPage() {
 
       <p>{book.description}</p>
 
-      {/* ➕ Add Button */}
+      {/* ➕ Reading List Button */}
       <button
         onClick={() =>
           addToReadingListMutation.mutate()
@@ -107,6 +129,57 @@ function BookDetailPage() {
           Reviews
         </h2>
 
+        {/* ✍️ Review Form (Only If Logged In) */}
+        {user && (
+          <div className="bg-gray-700 p-4 rounded mb-6">
+            <h3 className="text-lg font-semibold mb-3">
+              Add a Review
+            </h3>
+
+            <select
+              value={rating}
+              onChange={(e) =>
+                setRating(Number(e.target.value))
+              }
+              className="w-full p-2 mb-3 rounded bg-gray-800"
+            >
+              {[1, 2, 3, 4, 5].map((num) => (
+                <option key={num} value={num}>
+                  {num} Stars
+                </option>
+              ))}
+            </select>
+
+            <textarea
+              value={comment}
+              onChange={(e) =>
+                setComment(e.target.value)
+              }
+              placeholder="Write your review..."
+              className="w-full p-2 rounded bg-gray-800 mb-3"
+            />
+
+            <button
+              onClick={() =>
+                addReviewMutation.mutate()
+              }
+              disabled={addReviewMutation.isPending}
+              className="bg-green-600 px-4 py-2 rounded hover:bg-green-700"
+            >
+              {addReviewMutation.isPending
+                ? 'Submitting...'
+                : 'Submit Review'}
+            </button>
+
+            {addReviewMutation.isError && (
+              <p className="text-red-400 mt-2">
+                Failed to submit review
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Reviews List */}
         {reviewsLoading && (
           <p>Loading reviews...</p>
         )}
