@@ -1,5 +1,9 @@
 import { useParams } from 'react-router-dom'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query'
 import axiosClient from '../../api/axiosClient'
 
 function BookDetailPage() {
@@ -20,14 +24,30 @@ function BookDetailPage() {
     },
   })
 
+  // ⭐ Fetch Reviews (Public)
+  const {
+    data: reviews,
+    isLoading: reviewsLoading,
+    isError: reviewsError,
+  } = useQuery({
+    queryKey: ['reviews', id],
+    queryFn: async () => {
+      const response = await axiosClient.get(
+        `/books/${id}/reviews`
+      )
+      return response.data.data ?? response.data
+    },
+  })
+
   // ➕ Add To Reading List
   const addToReadingListMutation = useMutation({
     mutationFn: async () => {
       await axiosClient.post(`/reading-list/${id}`)
     },
     onSuccess: () => {
-      // Invalidate reading list cache
-      queryClient.invalidateQueries({ queryKey: ['readingList'] })
+      queryClient.invalidateQueries({
+        queryKey: ['readingList'],
+      })
     },
   })
 
@@ -45,6 +65,7 @@ function BookDetailPage() {
 
   return (
     <div className="max-w-3xl mx-auto mt-10 bg-gray-800 p-6 rounded">
+      {/* 📖 Book Info */}
       <h1 className="text-3xl font-bold mb-4">
         {book.title}
       </h1>
@@ -53,13 +74,13 @@ function BookDetailPage() {
         Author: {book.author}
       </p>
 
-      <p>
-        {book.description}
-      </p>
+      <p>{book.description}</p>
 
-      {/* ➕ Button */}
+      {/* ➕ Add Button */}
       <button
-        onClick={() => addToReadingListMutation.mutate()}
+        onClick={() =>
+          addToReadingListMutation.mutate()
+        }
         disabled={addToReadingListMutation.isPending}
         className="mt-6 bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 transition"
       >
@@ -79,6 +100,45 @@ function BookDetailPage() {
           Book added successfully!
         </p>
       )}
+
+      {/* ⭐ Reviews Section */}
+      <div className="mt-10">
+        <h2 className="text-2xl font-bold mb-4">
+          Reviews
+        </h2>
+
+        {reviewsLoading && (
+          <p>Loading reviews...</p>
+        )}
+
+        {reviewsError && (
+          <p className="text-red-500">
+            Failed to load reviews
+          </p>
+        )}
+
+        {reviews &&
+          reviews.length === 0 && (
+            <p className="text-gray-400">
+              No reviews yet.
+            </p>
+          )}
+
+        {reviews &&
+          reviews.map((review) => (
+            <div
+              key={review.id}
+              className="bg-gray-700 p-4 rounded mb-4"
+            >
+              <p className="font-semibold">
+                ⭐ {review.rating} / 5
+              </p>
+              <p className="mt-2">
+                {review.comment}
+              </p>
+            </div>
+          ))}
+      </div>
     </div>
   )
 }
