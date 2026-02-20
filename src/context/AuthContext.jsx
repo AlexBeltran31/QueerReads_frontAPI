@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import axios from 'axios'
+import axiosClient from '../api/axiosClient'
 
 const AuthContext = createContext()
 
@@ -15,38 +15,15 @@ export function AuthProvider({ children }) {
       return
     }
 
-    axios.get('http://localhost:8001/api/user', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then(res => setUser(res.data))
+    axiosClient
+      .get('/users/me')   // ✅ FIXED ROUTE
+      .then((res) => setUser(res.data))
       .catch(() => {
         localStorage.removeItem('token')
         setUser(null)
       })
       .finally(() => setLoading(false))
   }, [])
-
-  const login = async (email, password) => {
-    const response = await axios.post('http://localhost:8001/api/login', {
-      email,
-      password,
-    })
-
-    localStorage.setItem('token', response.data.token)
-
-    const userResponse = await axios.get(
-      'http://localhost:8001/api/user',
-      {
-        headers: {
-          Authorization: `Bearer ${response.data.token}`,
-        },
-      }
-    )
-
-    setUser(userResponse.data)
-  }
 
   const logout = () => {
     localStorage.removeItem('token')

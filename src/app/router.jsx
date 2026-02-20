@@ -6,6 +6,7 @@ import LoginPage from '../features/auth/LoginPage'
 import BooksPage from '../features/books/BooksPage'
 import BookDetailPage from '../features/books/BookDetailPage'
 import ReadingListPage from '../features/readingList/ReadingListPage'
+import AddBookPage from '../features/admin/AddBookPage'
 
 function Router() {
   return (
@@ -28,6 +29,7 @@ function Router() {
         {/* Admin */}
         <Route element={<AdminRoute />}>
           <Route path="/admin" element={<div>Admin Dashboard</div>} />
+          <Route path="/admin/books/create" element={<AddBookPage />} />
         </Route>
 
         <Route path="*" element={<div>Not Found</div>} />
