@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
+import axiosClient from '../../api/axiosClient'
 import { useAuth } from '../../context/AuthContext'
 
 function LoginPage() {
@@ -12,10 +12,7 @@ function LoginPage() {
 
   const loginMutation = useMutation({
   mutationFn: async () => {
-    const response = await axios.post(
-      'http://localhost:8000/api/login',
-      { email, password }
-    )
+    const response = await axiosClient.post('/login', { email, password })
 
     return response.data
   },
@@ -25,14 +22,7 @@ function LoginPage() {
     localStorage.setItem('token', data.token)
 
     // 2️⃣ Fetch user
-    const userResponse = await axios.get(
-      'http://localhost:8000/api/user',
-      {
-        headers: {
-          Authorization: `Bearer ${data.token}`,
-        },
-      }
-    )
+    const userResponse = await axiosClient.get('/users/me')
 
     // 3️⃣ Update context
     setUser(userResponse.data)
