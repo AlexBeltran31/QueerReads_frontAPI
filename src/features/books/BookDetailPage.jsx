@@ -1,10 +1,12 @@
 import { useParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import axiosClient from '../../api/axiosClient'
 
 function BookDetailPage() {
   const { id } = useParams()
+  const queryClient = useQueryClient()
 
+  // 📖 Fetch Book
   const {
     data: book,
     isLoading,
@@ -15,6 +17,17 @@ function BookDetailPage() {
     queryFn: async () => {
       const response = await axiosClient.get(`/books/${id}`)
       return response.data.data
+    },
+  })
+
+  // ➕ Add To Reading List
+  const addToReadingListMutation = useMutation({
+    mutationFn: async () => {
+      await axiosClient.post(`/reading-list/${id}`)
+    },
+    onSuccess: () => {
+      // Invalidate reading list cache
+      queryClient.invalidateQueries({ queryKey: ['readingList'] })
     },
   })
 
@@ -43,6 +56,29 @@ function BookDetailPage() {
       <p>
         {book.description}
       </p>
+
+      {/* ➕ Button */}
+      <button
+        onClick={() => addToReadingListMutation.mutate()}
+        disabled={addToReadingListMutation.isPending}
+        className="mt-6 bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 transition"
+      >
+        {addToReadingListMutation.isPending
+          ? 'Adding...'
+          : 'Add to Reading List'}
+      </button>
+
+      {addToReadingListMutation.isError && (
+        <p className="text-red-500 mt-2">
+          Failed to add book
+        </p>
+      )}
+
+      {addToReadingListMutation.isSuccess && (
+        <p className="text-green-500 mt-2">
+          Book added successfully!
+        </p>
+      )}
     </div>
   )
 }
