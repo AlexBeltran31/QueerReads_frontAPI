@@ -2,35 +2,44 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import axiosClient from '../../api/axiosClient'
 
-function BooksPage() {
+function ReadingListPage() {
   const {
     data: books,
     isLoading,
     isError,
     error,
   } = useQuery({
-    queryKey: ['books'],
+    queryKey: ['readingList'],
     queryFn: async () => {
-      const response = await axiosClient.get('/books')
-      return response.data.data
+      const response = await axiosClient.get('/reading-list')
+      return response.data
     },
   })
 
   if (isLoading) {
-    return <div className="text-center mt-10">Loading books...</div>
+    return <div className="mt-10">Loading your reading list...</div>
   }
 
   if (isError) {
     return (
-      <div className="text-center mt-10 text-red-500">
+      <div className="mt-10 text-red-500">
         {error.message}
+      </div>
+    )
+  }
+
+  if (!books || books.length === 0) {
+    return (
+      <div className="mt-10">
+        <h1 className="text-2xl font-bold mb-4">Your Reading List</h1>
+        <p className="text-gray-400">You haven’t added any books yet.</p>
       </div>
     )
   }
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-6">Books</h1>
+      <h1 className="text-3xl font-bold mb-6">Your Reading List</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {books.map((book) => (
@@ -52,4 +61,4 @@ function BooksPage() {
   )
 }
 
-export default BooksPage
+export default ReadingListPage

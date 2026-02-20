@@ -5,6 +5,7 @@ import AdminRoute from '../components/common/AdminRoute'
 import LoginPage from '../features/auth/LoginPage'
 import BooksPage from '../features/books/BooksPage'
 import BookDetailPage from '../features/books/BookDetailPage'
+import ReadingListPage from '../features/readingList/ReadingListPage'
 
 function Router() {
   return (
@@ -19,7 +20,7 @@ function Router() {
 
         {/* Protected */}
         <Route element={<ProtectedRoute />}>
-          <Route path="/reading-list" element={<div>Reading List</div>} />
+          <Route path="/reading-list" element={<ReadingListPage />} />
           <Route path="/profile" element={<div>Profile</div>} />
           <Route path="/random" element={<div>Random Suggestion</div>} />
         </Route>
