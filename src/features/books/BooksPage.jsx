@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
+import { Link } from 'react-router-dom'
 
 function BooksPage() {
   const { data, isLoading, isError, error } = useQuery({
@@ -31,17 +32,19 @@ function BooksPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {data.map((book) => (
-          <div
+          <Link
             key={book.id}
-            className="bg-gray-800 p-4 rounded shadow"
-          >
+            to={`/books/${book.id}`}
+            className="bg-gray-800 p-4 rounded shadow block hover:bg-gray-700 transition"
+        >
+
             <h2 className="text-xl font-semibold">
               {book.title}
             </h2>
             <p className="text-gray-400 mt-2">
               {book.author}
             </p>
-          </div>
+          </Link>
         ))}
       </div>
     </div>

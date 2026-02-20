@@ -4,6 +4,7 @@ import ProtectedRoute from '../components/common/ProtectedRoute'
 import AdminRoute from '../components/common/AdminRoute'
 import LoginPage from '../features/auth/LoginPage'
 import BooksPage from '../features/books/BooksPage'
+import BookDetailPage from '../features/books/BookDetailPage'
 
 function Router() {
   return (
@@ -13,7 +14,7 @@ function Router() {
         <Route path="/" element={<BooksPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<div>Register</div>} />
-        <Route path="/books/:id" element={<div>Book Detail</div>} />
+        <Route path="/books/:id" element={<BookDetailPage />} />
         <Route path="/categories" element={<div>Categories</div>} />
 
         {/* Protected */}
