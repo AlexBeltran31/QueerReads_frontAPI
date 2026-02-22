@@ -7,23 +7,31 @@ import BooksPage from '../features/books/BooksPage'
 import BookDetailPage from '../features/books/BookDetailPage'
 import ReadingListPage from '../features/readingList/ReadingListPage'
 import AddBookPage from '../features/admin/AddBookPage'
+import UserDashboardPage from '../features/dashboard/UserDashboardPage'
+import CategoriesPage from '../features/categories/CategoriesPage'
+import CategoryDetailPage from '../features/categories/CategoryDetailPage'
 
 function Router() {
   return (
     <Routes>
       <Route element={<Layout />}>
+
         {/* Public */}
         <Route path="/" element={<BooksPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<div>Register</div>} />
         <Route path="/books/:id" element={<BookDetailPage />} />
-        <Route path="/categories" element={<div>Categories</div>} />
+
+        {/* ✅ Categories (Public) */}
+        <Route path="/categories" element={<CategoriesPage />} />
+        <Route path="/categories/:id" element={<CategoryDetailPage />} />
 
         {/* Protected */}
         <Route element={<ProtectedRoute />}>
           <Route path="/reading-list" element={<ReadingListPage />} />
           <Route path="/profile" element={<div>Profile</div>} />
           <Route path="/random" element={<div>Random Suggestion</div>} />
+          <Route path="/dashboard" element={<UserDashboardPage />} />
         </Route>
 
         {/* Admin */}
@@ -33,6 +41,7 @@ function Router() {
         </Route>
 
         <Route path="*" element={<div>Not Found</div>} />
+
       </Route>
     </Routes>
   )
