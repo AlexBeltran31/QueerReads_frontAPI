@@ -45,10 +45,41 @@ function BookDetailPage() {
     },
   })
 
+  // 📚 Fetch Reading List (only if logged in)
+  const { data: readingList = [] } = useQuery({
+    queryKey: ['readingList'],
+    queryFn: async () => {
+      const { data } = await axiosClient.get('/reading-list')
+      return data.data ?? data
+    },
+    enabled: !!user,
+  })
+
+  const userBook = readingList.find(
+    (b) => b.id === Number(id)
+  )
+
+  const canReview =
+    userBook?.pivot?.status === 'finished'
+
   // ➕ Add To Reading List
   const addToReadingListMutation = useMutation({
     mutationFn: async () => {
       await axiosClient.post(`/reading-list/${id}`)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['readingList'],
+      })
+    },
+  })
+
+  // 🔄 Update Reading Status
+  const updateStatusMutation = useMutation({
+    mutationFn: async (status) => {
+      await axiosClient.put(`/reading-list/${id}`, {
+        status,
+      })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -98,29 +129,46 @@ function BookDetailPage() {
 
       <p>{book.description}</p>
 
-      {/* ➕ Reading List Button */}
-      <button
-        onClick={() =>
-          addToReadingListMutation.mutate()
-        }
-        disabled={addToReadingListMutation.isPending}
-        className="mt-6 bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 transition"
-      >
-        {addToReadingListMutation.isPending
-          ? 'Adding...'
-          : 'Add to Reading List'}
-      </button>
+      {/* 📚 Reading List Section */}
+      {!userBook ? (
+        <button
+          onClick={() =>
+            addToReadingListMutation.mutate()
+          }
+          disabled={addToReadingListMutation.isPending}
+          className="mt-6 bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 transition"
+        >
+          {addToReadingListMutation.isPending
+            ? 'Adding...'
+            : 'Add to Reading List'}
+        </button>
+      ) : (
+        <div className="mt-6 bg-gray-700 p-4 rounded">
+          <p className="mb-3 text-sm text-gray-300">
+            Status:
+          </p>
 
-      {addToReadingListMutation.isError && (
-        <p className="text-red-500 mt-2">
-          Failed to add book
-        </p>
-      )}
-
-      {addToReadingListMutation.isSuccess && (
-        <p className="text-green-500 mt-2">
-          Book added successfully!
-        </p>
+          <select
+            value={userBook.pivot.status}
+            onChange={(e) =>
+              updateStatusMutation.mutate(
+                e.target.value
+              )
+            }
+            disabled={updateStatusMutation.isPending}
+            className="w-full p-2 rounded bg-gray-800"
+          >
+            <option value="to_read">
+              Pending
+            </option>
+            <option value="reading">
+              Reading
+            </option>
+            <option value="finished">
+              Finished
+            </option>
+          </select>
+        </div>
       )}
 
       {/* ⭐ Reviews Section */}
@@ -129,8 +177,8 @@ function BookDetailPage() {
           Reviews
         </h2>
 
-        {/* ✍️ Review Form (Only If Logged In) */}
-        {user && (
+        {/* ✍️ Review Form (ONLY if finished) */}
+        {user && canReview && (
           <div className="bg-gray-700 p-4 rounded mb-6">
             <h3 className="text-lg font-semibold mb-3">
               Add a Review
@@ -170,13 +218,15 @@ function BookDetailPage() {
                 ? 'Submitting...'
                 : 'Submit Review'}
             </button>
-
-            {addReviewMutation.isError && (
-              <p className="text-red-400 mt-2">
-                Failed to submit review
-              </p>
-            )}
           </div>
+        )}
+
+        {/* 🚫 If not finished */}
+        {user && userBook && !canReview && (
+          <p className="text-yellow-400 mb-6">
+            You can leave a review once you
+            finish this book.
+          </p>
         )}
 
         {/* Reviews List */}
