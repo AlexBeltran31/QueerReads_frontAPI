@@ -10,6 +10,9 @@ import AddBookPage from '../features/admin/AddBookPage'
 import UserDashboardPage from '../features/dashboard/UserDashboardPage'
 import CategoriesPage from '../features/categories/CategoriesPage'
 import CategoryDetailPage from '../features/categories/CategoryDetailPage'
+import AdminDashboardPage from '../features/admin/AdminDashboardPage'
+import EditBookPage from '../features/admin/EditBookPage'
+import ProfilePage from '../features/user/ProfilePage'
 
 function Router() {
   return (
@@ -29,15 +32,16 @@ function Router() {
         {/* Protected */}
         <Route element={<ProtectedRoute />}>
           <Route path="/reading-list" element={<ReadingListPage />} />
-          <Route path="/profile" element={<div>Profile</div>} />
           <Route path="/random" element={<div>Random Suggestion</div>} />
           <Route path="/dashboard" element={<UserDashboardPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Route>
 
         {/* Admin */}
         <Route element={<AdminRoute />}>
-          <Route path="/admin" element={<div>Admin Dashboard</div>} />
+          <Route path="/admin" element={<AdminDashboardPage />} />
           <Route path="/admin/books/create" element={<AddBookPage />} />
+          <Route path="/admin/books/:id/edit" element={<EditBookPage />} />
         </Route>
 
         <Route path="*" element={<div>Not Found</div>} />
