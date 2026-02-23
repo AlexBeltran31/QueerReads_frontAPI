@@ -13,16 +13,16 @@ function AddBookPage() {
 
   // Fetch categories
   const { data: categories = [] } = useQuery({
-    queryKey: ['admin-categories'],
+    queryKey: ['categories'],
     queryFn: async () => {
-      const { data } = await axiosClient.get('/admin/categories')
+      const { data } = await axiosClient.get('/categories')
       return data
     },
   })
 
   const addBookMutation = useMutation({
     mutationFn: async () => {
-      const response = await axiosClient.post('/admin/books', {
+      const response = await axiosClient.post('/books', {
         title,
         author,
         description,

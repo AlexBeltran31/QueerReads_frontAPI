@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import axiosClient from '../../api/axiosClient'
-import { useAdminBooks } from './useAdminBooks'
+import { useAdminBooks } from './useBooksAdmin'
 
 export default function AdminDashboardPage() {
   const queryClient = useQueryClient()
@@ -9,10 +9,10 @@ export default function AdminDashboardPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
-      await axiosClient.delete(`/admin/books/${id}`)
+      await axiosClient.delete(`/books/${id}`)
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['admin-books'])
+      queryClient.invalidateQueries(['books-admin'])
     },
   })
 
@@ -63,12 +63,12 @@ export default function AdminDashboardPage() {
               </div>
 
               <div className="flex gap-2">
-                <a
-                  href={`/admin/books/${book.id}/edit`}
-                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+                <Link
+                    to={`/admin/books/${book.id}/edit`}
+                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
                 >
-                  Edit
-                </a>
+                    Edit
+                </Link>
               </div>
             </div>
           ))}

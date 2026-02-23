@@ -8,11 +8,11 @@ export const useUpdateBook = () => {
 
   return useMutation({
     mutationFn: async ({ id, data }) => {
-      const response = await axiosClient.put(`/admin/books/${id}`, data)
+      const response = await axiosClient.put(`/books/${id}`, data)
       return response.data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['admin-books'])
+      queryClient.invalidateQueries(['books-admin'])
       navigate('/admin')
     },
   })

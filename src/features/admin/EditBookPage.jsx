@@ -16,9 +16,9 @@ export default function EditBookPage() {
 
   // Fetch book
   const { data: book, isLoading } = useQuery({
-    queryKey: ['admin-book', id],
+    queryKey: ['books-admin', id],
     queryFn: async () => {
-      const { data } = await axiosClient.get(`/admin/books/${id}`)
+      const { data } = await axiosClient.get(`/books/${id}`)
       return data
     },
     enabled: !!id,
@@ -28,7 +28,7 @@ export default function EditBookPage() {
   const { data: categories = [] } = useQuery({
     queryKey: ['admin-categories'],
     queryFn: async () => {
-      const { data } = await axiosClient.get('/admin/categories')
+      const { data } = await axiosClient.get('/categories')
       return data
     },
   })
@@ -38,7 +38,7 @@ export default function EditBookPage() {
   // ✅ Proper delete mutation
   const deleteMutation = useMutation({
     mutationFn: async () => {
-      await axiosClient.delete(`/admin/books/${id}`)
+      await axiosClient.delete(`/books/${id}`)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-books'] })

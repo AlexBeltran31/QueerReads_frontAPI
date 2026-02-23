@@ -3,9 +3,9 @@ import axiosClient from '../../api/axiosClient'
 
 export const useAdminBooks = () => {
   return useQuery({
-    queryKey: ['admin-books'],
+    queryKey: ['books-admin'],
     queryFn: async () => {
-      const { data } = await axiosClient.get('/admin/books')
+      const { data } = await axiosClient.get('/books')
       return data
     },
   })
