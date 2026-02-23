@@ -84,7 +84,7 @@ I also needed, a couple times, to ask it to slow down so I could understand why 
 ![Slowing Down](src/docs/images/slowing_down.png)
 
 I tried to keep my distance, cause, you know, people are getting married to these things but… sometimes we got too excited after two hours trying to figure out why the API wasn’t connecting to the front… I lost my mind a little bit that day…
-![Friends](src/docs/images/actually_befriending.npg)
+![Friends](src/docs/images/actually_befriending.png)
 
 Thoughts: git flow and git in general are not ChatGPT strengths. Every time I had to merge, push, or change branches I couldn't trust it's steps. Also 90% of the time I had to stop between steps to make commits so I could keep gitflow; it wasn't it's priority.
 Also as code analisis most of the code it gave me worked perfectly, having in mind it knew all the other codes involved in other files it did itself. That was a big plus, the chat did the architecture, folder structure, routing plan, etc, and we followed it's plan. But a big issue in this project was getting into a loop whenever the chat would try to fix it's own code cause' it would return an error and it'll take us one hour going through different codes, sometimes the same one it gave me three trials before.
