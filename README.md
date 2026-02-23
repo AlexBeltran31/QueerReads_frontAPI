@@ -1,24 +1,39 @@
 📚 QueerReads — Frontend
+
 A modern React frontend for QueerReads, a role-based reading management platform with OAuth authentication and full admin capabilities.
+
 This application connects to a Laravel REST API and handless authentication, protected routes, serves state management, and admin CRUD operations.
 ---
 
 🚀 Tech Stack
+
 * React (Vite)
+
 * React Router v6
+
 * TanStack React Query
+
 * Axios (centralized instance + interceptos)
+
 * Context API (Auth state)
+
 * Tailwind CSS
 ---
 
 🏗 Architecture Overview
+
 The frontend follows a feature-based modular architecture, with clear separation between:
+
     🔐 Authentication state
+
     🌐 Server state
+
     🎨 UI components
+
     🔗 API communication layer
+
 Structure:
+
     src/
     ├── api/
     │     axiosClient.js
@@ -41,8 +56,11 @@ This structure avoids mixing business logic with UI and keeps the code scalable.
 ---
 
 🔗 Conection between Frontend & Backend
+
 The frontend communicates with the Laravel API through a centralized Axios client.
+
     📌 Centralized Axios Instance
+
         // src/api/axiosClient.js
 
         import axios from 'axios'
@@ -67,13 +85,18 @@ The frontend communicates with the Laravel API through a centralized Axios clien
         export default axiosClient
 
 Why this matters:
+
     * Every request automatically targets the backend API
+
     * Authentication token is automatically attached
+
     * No repetition of base URL or headers
+
     * Keeps API logic separate from components
 ---
 
 🔐 Authentication Flow
+
 1. User logs in → POST /api/login
 2. Backend returns OAuth token.
 3. Token is stored in localStorage.
@@ -85,14 +108,20 @@ Why this matters:
     * Restores authenticated user
 
 Route protection is handled via:
-* <ProtectedRoute />
-* <AdminRoute />
+
+*  <ProtectedRoute />
+
+*  <AdminRoute />
+
 Backend also enforces roles (role:admin middleware), so security is server-driven.
 ---
 
 🌐 Server State Management (React Query)
+
 Instead of calling Axios directly inside components, we use React Query to manage server state.
+
 Example:
+
     export const useAdminBooks = () => {
         return useQuery({
             queryKey: ['admin-books'],
@@ -104,12 +133,16 @@ Example:
     }
 
 Benefits:
+
 * Automatic caching
 * Loading & erorr states
 * Easy data invalidation
 * UI stays synchronized with backend
+
 After a mutation:
+
     queryClient.invalidateQueries(['admin-books'])
+
 The data automatically refetches and updates the UI.
 ---
 
@@ -125,19 +158,27 @@ This is structured closer to production architecture than a tutorial-level SPA.
 ---
 
 🧪 Running the Project
+
 npm install
+
 npm run dev
 
 Make sure the Laravel backend is running on:
+
     http://localhost:8001
 ---
 
 📌 Key Architectural Decision
+
 The most important design choice in this frontend is the centralized Axios client + React Query combination.
+
 Axios handles communication and authentication.
+
 React Query handles synchronization and state consistency.
+
 This keeps the frontend predictable, maintainable, and scalable.
 ---
 
 💜 Author Developed by Alex Beltrán – Fullstack Development
+
     featuring. ChatGPT 5.2
