@@ -1,0 +1,269 @@
+import { useParams } from 'react-router-dom'
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query'
+import { useState } from 'react'
+import axiosClient from '../../api/axiosClient'
+import { useAuth } from '../../context/AuthContext'
+
+function BookDetailPage() {
+  const { id } = useParams()
+  const queryClient = useQueryClient()
+  const { user } = useAuth()
+
+  const [rating, setRating] = useState(5)
+  const [comment, setComment] = useState('')
+
+  // 📖 Fetch Book
+  const {
+    data: book,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ['book', id],
+    queryFn: async () => {
+      const response = await axiosClient.get(`/books/${id}`)
+      return response.data.data
+    },
+  })
+
+  // ⭐ Fetch Reviews
+  const {
+    data: reviews,
+    isLoading: reviewsLoading,
+    isError: reviewsError,
+  } = useQuery({
+    queryKey: ['reviews', id],
+    queryFn: async () => {
+      const response = await axiosClient.get(
+        `/books/${id}/reviews`
+      )
+      return response.data.data ?? response.data
+    },
+  })
+
+  // 📚 Fetch Reading List (only if logged in)
+  const { data: readingList = [] } = useQuery({
+    queryKey: ['readingList'],
+    queryFn: async () => {
+      const { data } = await axiosClient.get('/reading-list')
+      return data.data ?? data
+    },
+    enabled: !!user,
+  })
+
+  const userBook = readingList.find(
+    (b) => b.id === Number(id)
+  )
+
+  const canReview =
+    userBook?.pivot?.status === 'finished'
+
+  // ➕ Add To Reading List
+  const addToReadingListMutation = useMutation({
+    mutationFn: async () => {
+      await axiosClient.post(`/reading-list/${id}`)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['readingList'],
+      })
+    },
+  })
+
+  // 🔄 Update Reading Status
+  const updateStatusMutation = useMutation({
+    mutationFn: async (status) => {
+      await axiosClient.put(`/reading-list/${id}`, {
+        status,
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['readingList'],
+      })
+    },
+  })
+
+  // ✍️ Add Review
+  const addReviewMutation = useMutation({
+    mutationFn: async () => {
+      await axiosClient.post(`/books/${id}/reviews`, {
+        rating,
+        comment,
+      })
+    },
+    onSuccess: () => {
+      setComment('')
+      queryClient.invalidateQueries({
+        queryKey: ['reviews', id],
+      })
+    },
+  })
+
+  if (isLoading) {
+    return <div className="mt-10">Loading book...</div>
+  }
+
+  if (isError) {
+    return (
+      <div className="mt-10 text-red-500">
+        {error.message}
+      </div>
+    )
+  }
+
+  return (
+    <div className="max-w-3xl mx-auto mt-10 bg-gray-800 p-6 rounded">
+      {/* 📖 Book Info */}
+      <h1 className="text-3xl font-bold mb-4">
+        {book.title}
+      </h1>
+
+      <p className="text-gray-400 mb-4">
+        Author: {book.author}
+      </p>
+
+      <p>{book.description}</p>
+
+      {/* 📚 Reading List Section */}
+      {!userBook ? (
+        <button
+          onClick={() =>
+            addToReadingListMutation.mutate()
+          }
+          disabled={addToReadingListMutation.isPending}
+          className="mt-6 bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 transition"
+        >
+          {addToReadingListMutation.isPending
+            ? 'Adding...'
+            : 'Add to Reading List'}
+        </button>
+      ) : (
+        <div className="mt-6 bg-gray-700 p-4 rounded">
+          <p className="mb-3 text-sm text-gray-300">
+            Status:
+          </p>
+
+          <select
+            value={userBook.pivot.status}
+            onChange={(e) =>
+              updateStatusMutation.mutate(
+                e.target.value
+              )
+            }
+            disabled={updateStatusMutation.isPending}
+            className="w-full p-2 rounded bg-gray-800"
+          >
+            <option value="to_read">
+              Pending
+            </option>
+            <option value="reading">
+              Reading
+            </option>
+            <option value="finished">
+              Finished
+            </option>
+          </select>
+        </div>
+      )}
+
+      {/* ⭐ Reviews Section */}
+      <div className="mt-10">
+        <h2 className="text-2xl font-bold mb-4">
+          Reviews
+        </h2>
+
+        {/* ✍️ Review Form (ONLY if finished) */}
+        {user && canReview && (
+          <div className="bg-gray-700 p-4 rounded mb-6">
+            <h3 className="text-lg font-semibold mb-3">
+              Add a Review
+            </h3>
+
+            <select
+              value={rating}
+              onChange={(e) =>
+                setRating(Number(e.target.value))
+              }
+              className="w-full p-2 mb-3 rounded bg-gray-800"
+            >
+              {[1, 2, 3, 4, 5].map((num) => (
+                <option key={num} value={num}>
+                  {num} Stars
+                </option>
+              ))}
+            </select>
+
+            <textarea
+              value={comment}
+              onChange={(e) =>
+                setComment(e.target.value)
+              }
+              placeholder="Write your review..."
+              className="w-full p-2 rounded bg-gray-800 mb-3"
+            />
+
+            <button
+              onClick={() =>
+                addReviewMutation.mutate()
+              }
+              disabled={addReviewMutation.isPending}
+              className="bg-green-600 px-4 py-2 rounded hover:bg-green-700"
+            >
+              {addReviewMutation.isPending
+                ? 'Submitting...'
+                : 'Submit Review'}
+            </button>
+          </div>
+        )}
+
+        {/* 🚫 If not finished */}
+        {user && userBook && !canReview && (
+          <p className="text-yellow-400 mb-6">
+            You can leave a review once you
+            finish this book.
+          </p>
+        )}
+
+        {/* Reviews List */}
+        {reviewsLoading && (
+          <p>Loading reviews...</p>
+        )}
+
+        {reviewsError && (
+          <p className="text-red-500">
+            Failed to load reviews
+          </p>
+        )}
+
+        {reviews &&
+          reviews.length === 0 && (
+            <p className="text-gray-400">
+              No reviews yet.
+            </p>
+          )}
+
+        {reviews &&
+          reviews.map((review) => (
+            <div
+              key={review.id}
+              className="bg-gray-700 p-4 rounded mb-4"
+            >
+              <p className="font-semibold">
+                ⭐ {review.rating} / 5
+              </p>
+              <p className="mt-2">
+                {review.comment}
+              </p>
+            </div>
+          ))}
+      </div>
+    </div>
+  )
+}
+
+export default BookDetailPage
