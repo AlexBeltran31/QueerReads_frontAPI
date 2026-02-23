@@ -26,7 +26,7 @@ function BookDetailPage() {
     queryKey: ['book', id],
     queryFn: async () => {
       const response = await axiosClient.get(`/books/${id}`)
-      return response.data.data
+      return response.data
     },
   })
 

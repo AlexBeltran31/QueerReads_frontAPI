@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { useCategory } from './useCategory'
 import { useCategories } from './useCategories'
 
@@ -8,7 +8,9 @@ export default function CategoryDetailPage() {
   const { data: books = [], isLoading } = useCategory(id)
   const { data: categories = [] } = useCategories()
 
-  const category = categories.find(cat => cat.id === Number(id))
+  const category = categories.find(
+    (cat) => cat.id === Number(id)
+  )
 
   if (isLoading) return <p>Loading category...</p>
 
@@ -24,18 +26,21 @@ export default function CategoryDetailPage() {
         </p>
       ) : (
         <div className="grid md:grid-cols-3 gap-6">
-          {books.map(book => (
-            <div
+          {books.map((book) => (
+            <Link
               key={book.id}
-              className="bg-white text-gray-900 p-6 rounded-xl shadow"
+              to={`/books/${book.id}`}
+              className="block transform hover:scale-105 transition"
             >
-              <h2 className="font-semibold">
-                {book.title}
-              </h2>
-              <p className="text-sm text-gray-500">
-                {book.author}
-              </p>
-            </div>
+              <div className="bg-white text-gray-900 p-6 rounded-xl shadow hover:shadow-lg">
+                <h2 className="font-semibold">
+                  {book.title}
+                </h2>
+                <p className="text-sm text-gray-500">
+                  {book.author}
+                </p>
+              </div>
+            </Link>
           ))}
         </div>
       )}
