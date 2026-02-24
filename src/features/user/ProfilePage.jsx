@@ -7,9 +7,9 @@ export default function ProfilePage() {
   const { user } = useAuth()
 
   const { data: readingList = [], isLoading } = useQuery({
-    queryKey: ['readingList'],
+    queryKey: ['readingList', user?.id],
     queryFn: async () => {
-      const { data } = await axiosClient.get('/reading-list')
+      const { data } = await axiosClient.get(`/users/${user.id}/books`)
       return data.data ?? data
     },
   })

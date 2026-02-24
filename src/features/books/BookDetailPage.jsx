@@ -47,9 +47,9 @@ function BookDetailPage() {
 
   // 📚 Fetch Reading List (only if logged in)
   const { data: readingList = [] } = useQuery({
-    queryKey: ['readingList'],
+    queryKey: ['readingList', user?.id],
     queryFn: async () => {
-      const { data } = await axiosClient.get('/reading-list')
+      const { data } = await axiosClient.get(`/users/${user.id}/books`)
       return data.data ?? data
     },
     enabled: !!user,
@@ -65,11 +65,12 @@ function BookDetailPage() {
   // ➕ Add To Reading List
   const addToReadingListMutation = useMutation({
     mutationFn: async () => {
-      await axiosClient.post(`/reading-list/${id}`)
+      await axiosClient.post(`/books/${id}/users/${user.id}`, {
+        status: 'to_read'})
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['readingList'],
+        queryKey: ['readingList', user?.id],
       })
     },
   })
@@ -77,13 +78,11 @@ function BookDetailPage() {
   // 🔄 Update Reading Status
   const updateStatusMutation = useMutation({
     mutationFn: async (status) => {
-      await axiosClient.put(`/reading-list/${id}`, {
-        status,
-      })
+      await axiosClient.patch(`/books/${id}/users/${user.id}`, { status })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['readingList'],
+        queryKey: ['readingList', user?.id],
       })
     },
   })

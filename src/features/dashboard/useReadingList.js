@@ -1,12 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import axiosClient from '../../api/axiosClient'
 
-export const useReadingList = () => {
+export const useReadingList = (userId) => {
   return useQuery({
-    queryKey: ['readingList'],
+    queryKey: ['readingList', userId],
     queryFn: async () => {
-      const { data } = await axiosClient.get('/reading-list')
+      const { data } = await axiosClient.get(`/users/${userId}/books`)
       return data
-    }
+    },
+    enabled: !!userId
   })
 }
