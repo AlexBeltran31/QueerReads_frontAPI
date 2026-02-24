@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 
 export default function ProfilePage() {
-  const { user } = useAuth()
+  const { user, setUser } = useAuth()
   const queryClient = useQueryClient()
 
   const [isEditing, setIsEditing] = useState(false)
@@ -15,7 +15,14 @@ export default function ProfilePage() {
     pronouns: '',
   })
 
-  // Sync form when user loads
+  const [passwordData, setPasswordData] = useState({
+    current_password: '',
+    password: '',
+    password_confirmation: '',
+  })
+
+  const [passwordMessage, setPasswordMessage] = useState(null)
+
   useEffect(() => {
     if (user) {
       setFormData({
@@ -43,10 +50,32 @@ export default function ProfilePage() {
       )
       return response.data
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['readingList', user?.id] })
-      queryClient.invalidateQueries({ queryKey: ['authUser'] })
+    onSuccess: (updatedUser) => {
+      setUser(updatedUser)
       setIsEditing(false)
+    },
+  })
+
+  const updatePasswordMutation = useMutation({
+    mutationFn: async (data) => {
+      const response = await axiosClient.put(
+        `/users/${user.id}/password`,
+        data
+      )
+      return response.data
+    },
+    onSuccess: (data) => {
+      setPasswordMessage(data.message)
+      setPasswordData({
+        current_password: '',
+        password: '',
+        password_confirmation: '',
+      })
+    },
+    onError: (error) => {
+      setPasswordMessage(
+        error.response?.data?.message || 'Error updating password.'
+      )
     },
   })
 
@@ -69,7 +98,7 @@ export default function ProfilePage() {
   return (
     <div className="max-w-5xl mx-auto py-10">
 
-      {/* User Info */}
+      {/* PROFILE INFO */}
       <div className="bg-gray-800 p-6 rounded mb-10">
         {!isEditing ? (
           <>
@@ -146,7 +175,71 @@ export default function ProfilePage() {
         )}
       </div>
 
-      {/* Reading Sections */}
+      {/* CHANGE PASSWORD */}
+      <div className="bg-gray-800 p-6 rounded mb-10">
+        <h2 className="text-xl font-semibold mb-4">
+          Change Password
+        </h2>
+
+        <input
+          type="password"
+          placeholder="Current password"
+          value={passwordData.current_password}
+          onChange={(e) =>
+            setPasswordData({
+              ...passwordData,
+              current_password: e.target.value,
+            })
+          }
+          className="w-full mb-3 p-2 rounded bg-gray-700"
+        />
+
+        <input
+          type="password"
+          placeholder="New password"
+          value={passwordData.password}
+          onChange={(e) =>
+            setPasswordData({
+              ...passwordData,
+              password: e.target.value,
+            })
+          }
+          className="w-full mb-3 p-2 rounded bg-gray-700"
+        />
+
+        <input
+          type="password"
+          placeholder="Confirm new password"
+          value={passwordData.password_confirmation}
+          onChange={(e) =>
+            setPasswordData({
+              ...passwordData,
+              password_confirmation: e.target.value,
+            })
+          }
+          className="w-full mb-3 p-2 rounded bg-gray-700"
+        />
+
+        <button
+          onClick={() =>
+            updatePasswordMutation.mutate(passwordData)
+          }
+          disabled={updatePasswordMutation.isPending}
+          className="bg-purple-600 px-4 py-2 rounded hover:bg-purple-700 transition"
+        >
+          {updatePasswordMutation.isPending
+            ? 'Updating...'
+            : 'Update Password'}
+        </button>
+
+        {passwordMessage && (
+          <p className="mt-3 text-sm text-gray-300">
+            {passwordMessage}
+          </p>
+        )}
+      </div>
+
+      {/* READING LIST SECTIONS */}
       <div className="grid md:grid-cols-3 gap-6">
 
         <ReadingSection

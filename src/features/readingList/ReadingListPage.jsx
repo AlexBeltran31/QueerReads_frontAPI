@@ -4,12 +4,15 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import axiosClient from '../../api/axiosClient'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { useState } from 'react'
 
 function ReadingListPage() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
+  const [randomError, setRandomError] = useState(null)
 
   const statusLabels = {
     to_read: 'Pending',
@@ -29,10 +32,33 @@ function ReadingListPage() {
       const response = await axiosClient.get(
         `/users/${user.id}/books`
       )
-
       return response.data
     },
     enabled: !!user,
+  })
+
+  const pendingBooks = books.filter(
+    (book) => book.pivot?.status === 'to_read'
+  )
+
+  // 🎲 Random Pending Book
+  const randomBookMutation = useMutation({
+    mutationFn: async () => {
+      const response = await axiosClient.get(
+        '/books/random-to-read'
+      )
+      return response.data
+    },
+    onSuccess: (book) => {
+      navigate(`/books/${book.id}`)
+    },
+    onError: (error) => {
+      if (error.response?.status === 404) {
+        setRandomError('No pending books available.')
+      } else {
+        setRandomError('Something went wrong.')
+      }
+    },
   })
 
   // 🔄 Update Status
@@ -91,9 +117,35 @@ function ReadingListPage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-6">
-        Your Reading List
-      </h1>
+
+      {/* HEADER + RANDOM BUTTON */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">
+          Your Reading List
+        </h1>
+
+        <button
+          onClick={() => {
+            setRandomError(null)
+            randomBookMutation.mutate()
+          }}
+          disabled={
+            randomBookMutation.isPending ||
+            pendingBooks.length === 0
+          }
+          className="bg-purple-600 px-4 py-2 rounded hover:bg-purple-700 transition disabled:opacity-50"
+        >
+          {randomBookMutation.isPending
+            ? 'Picking...'
+            : '🎲 Pick Random Pending'}
+        </button>
+      </div>
+
+      {randomError && (
+        <p className="text-yellow-400 mb-4">
+          {randomError}
+        </p>
+      )}
 
       <div className="space-y-6">
         {books.map((book) => (
