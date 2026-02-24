@@ -165,7 +165,7 @@ npm run dev
 
 Make sure the Laravel backend is running on:
 
-    http://localhost:8001
+    http://localhost:8000
 ---
 
 📌 Key Architectural Decision
