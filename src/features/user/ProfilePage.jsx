@@ -1,16 +1,52 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import axiosClient from "../../api/axiosClient";
 import { useAuth } from "../../context/AuthContext";
 import { Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 
 export default function ProfilePage() {
   const { user } = useAuth()
+  const queryClient = useQueryClient()
+
+  const [isEditing, setIsEditing] = useState(false)
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    pronouns: '',
+  })
+
+  // Sync form when user loads
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || '',
+        email: user.email || '',
+        pronouns: user.pronouns || '',
+      })
+    }
+  }, [user])
 
   const { data: readingList = [], isLoading } = useQuery({
     queryKey: ['readingList', user?.id],
     queryFn: async () => {
       const { data } = await axiosClient.get(`/users/${user.id}/books`)
       return data.data ?? data
+    },
+    enabled: !!user,
+  })
+
+  const updateUserMutation = useMutation({
+    mutationFn: async (data) => {
+      const response = await axiosClient.put(
+        `/users/${user.id}`,
+        data
+      )
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['readingList', user?.id] })
+      queryClient.invalidateQueries({ queryKey: ['authUser'] })
+      setIsEditing(false)
     },
   })
 
@@ -32,20 +68,82 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-5xl mx-auto py-10">
-      
+
       {/* User Info */}
       <div className="bg-gray-800 p-6 rounded mb-10">
-        <h1 className="text-3xl font-bold mb-2">
-          {user?.name}
-        </h1>
+        {!isEditing ? (
+          <>
+            <h1 className="text-3xl font-bold mb-2">
+              {user?.name}
+            </h1>
 
-        <p className="text-gray-400">
-          @{user?.username}
-        </p>
+            <p className="text-gray-400">
+              {user?.email}
+            </p>
 
-        <p className="text-gray-400 mt-1">
-          Pronouns: {user?.pronouns}
-        </p>
+            <p className="text-gray-400 mt-1">
+              Pronouns: {user?.pronouns || '—'}
+            </p>
+
+            <button
+              onClick={() => setIsEditing(true)}
+              className="mt-4 bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 transition"
+            >
+              Edit Profile
+            </button>
+          </>
+        ) : (
+          <div className="mt-2">
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+              className="w-full mb-3 p-2 rounded bg-gray-700"
+              placeholder="Name"
+            />
+
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
+              className="w-full mb-3 p-2 rounded bg-gray-700"
+              placeholder="Email"
+            />
+
+            <input
+              type="text"
+              value={formData.pronouns}
+              onChange={(e) =>
+                setFormData({ ...formData, pronouns: e.target.value })
+              }
+              className="w-full mb-3 p-2 rounded bg-gray-700"
+              placeholder="Pronouns"
+            />
+
+            <div className="flex gap-3">
+              <button
+                onClick={() =>
+                  updateUserMutation.mutate(formData)
+                }
+                disabled={updateUserMutation.isPending}
+                className="bg-green-600 px-4 py-2 rounded hover:bg-green-700 transition"
+              >
+                {updateUserMutation.isPending ? 'Saving...' : 'Save'}
+              </button>
+
+              <button
+                onClick={() => setIsEditing(false)}
+                className="bg-red-600 px-4 py-2 rounded hover:bg-red-700 transition"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Reading Sections */}
