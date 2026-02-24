@@ -20,7 +20,6 @@ function ReadingListPage() {
     finished: 'Finished',
   }
 
-  // 📚 Fetch Reading List
   const {
     data: books = [],
     isLoading,
@@ -37,11 +36,18 @@ function ReadingListPage() {
     enabled: !!user,
   })
 
-  const pendingBooks = books.filter(
+  const toRead = books.filter(
     (book) => book.pivot?.status === 'to_read'
   )
 
-  // 🎲 Random Pending Book
+  const reading = books.filter(
+    (book) => book.pivot?.status === 'reading'
+  )
+
+  const finished = books.filter(
+    (book) => book.pivot?.status === 'finished'
+  )
+
   const randomBookMutation = useMutation({
     mutationFn: async () => {
       const response = await axiosClient.get(
@@ -52,16 +58,11 @@ function ReadingListPage() {
     onSuccess: (book) => {
       navigate(`/books/${book.id}`)
     },
-    onError: (error) => {
-      if (error.response?.status === 404) {
-        setRandomError('No pending books available.')
-      } else {
-        setRandomError('Something went wrong.')
-      }
+    onError: () => {
+      setRandomError('No pending books available.')
     },
   })
 
-  // 🔄 Update Status
   const updateStatusMutation = useMutation({
     mutationFn: async ({ bookId, status }) => {
       await axiosClient.patch(
@@ -76,7 +77,6 @@ function ReadingListPage() {
     },
   })
 
-  // ❌ Remove Book
   const removeBookMutation = useMutation({
     mutationFn: async (bookId) => {
       await axiosClient.delete(
@@ -102,23 +102,9 @@ function ReadingListPage() {
     )
   }
 
-  if (books.length === 0) {
-    return (
-      <div className="mt-10">
-        <h1 className="text-2xl font-bold mb-4">
-          Your Reading List
-        </h1>
-        <p className="text-gray-400">
-          You haven’t added any books yet.
-        </p>
-      </div>
-    )
-  }
-
   return (
-    <div>
+    <div className="max-w-6xl mx-auto py-10">
 
-      {/* HEADER + RANDOM BUTTON */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">
           Your Reading List
@@ -131,7 +117,7 @@ function ReadingListPage() {
           }}
           disabled={
             randomBookMutation.isPending ||
-            pendingBooks.length === 0
+            toRead.length === 0
           }
           className="bg-purple-600 px-4 py-2 rounded hover:bg-purple-700 transition disabled:opacity-50"
         >
@@ -147,60 +133,100 @@ function ReadingListPage() {
         </p>
       )}
 
-      <div className="space-y-6">
-        {books.map((book) => (
-          <div
-            key={book.id}
-            className="bg-gray-800 p-6 rounded"
-          >
-            <Link
-              to={`/books/${book.id}`}
-              className="text-xl font-semibold hover:underline"
-            >
-              {book.title}
-            </Link>
+      <div className="grid md:grid-cols-3 gap-6">
 
-            <p className="text-gray-400 mb-4">
-              Author: {book.author}
-            </p>
+        <ReadingColumn
+          title="📚 To Read"
+          books={toRead}
+          statusLabels={statusLabels}
+          updateStatusMutation={updateStatusMutation}
+          removeBookMutation={removeBookMutation}
+        />
 
-            <p className="mb-2">
-              Status:{' '}
-              <span className="font-semibold">
-                {statusLabels[book.pivot?.status]}
-              </span>
-            </p>
+        <ReadingColumn
+          title="📖 Reading"
+          books={reading}
+          statusLabels={statusLabels}
+          updateStatusMutation={updateStatusMutation}
+          removeBookMutation={removeBookMutation}
+        />
 
-            <div className="flex gap-3 mb-4">
-              {['to_read', 'reading', 'finished'].map(
-                (status) => (
-                  <button
-                    key={status}
-                    onClick={() =>
-                      updateStatusMutation.mutate({
-                        bookId: book.id,
-                        status,
-                      })
-                    }
-                    className="px-3 py-1 bg-blue-600 rounded hover:bg-blue-700 text-sm"
-                  >
-                    {statusLabels[status]}
-                  </button>
-                )
-              )}
-            </div>
+        <ReadingColumn
+          title="✅ Finished"
+          books={finished}
+          statusLabels={statusLabels}
+          updateStatusMutation={updateStatusMutation}
+          removeBookMutation={removeBookMutation}
+        />
 
-            <button
-              onClick={() =>
-                removeBookMutation.mutate(book.id)
-              }
-              className="bg-red-600 px-3 py-1 rounded hover:bg-red-700 text-sm"
-            >
-              Remove from list
-            </button>
-          </div>
-        ))}
       </div>
+    </div>
+  )
+}
+
+function ReadingColumn({
+  title,
+  books,
+  statusLabels,
+  updateStatusMutation,
+  removeBookMutation
+}) {
+  return (
+    <div className="bg-gray-800 p-6 rounded">
+      <h2 className="text-xl font-semibold mb-4">
+        {title}
+      </h2>
+
+      {books.length === 0 ? (
+        <p className="text-gray-400 text-sm">
+          No books here.
+        </p>
+      ) : (
+        <div className="space-y-4">
+          {books.map((book) => (
+            <div key={book.id} className="bg-gray-700 p-4 rounded">
+              <Link
+                to={`/books/${book.id}`}
+                className="font-semibold hover:underline"
+              >
+                {book.title}
+              </Link>
+
+              <p className="text-sm text-gray-400">
+                {book.author}
+              </p>
+
+              <div className="flex gap-2 mt-3">
+                {['to_read', 'reading', 'finished'].map(
+                  (status) => (
+                    <button
+                      key={status}
+                      onClick={() =>
+                        updateStatusMutation.mutate({
+                          bookId: book.id,
+                          status,
+                        })
+                      }
+                      className="px-2 py-1 bg-blue-600 rounded text-xs"
+                    >
+                      {statusLabels[status]}
+                    </button>
+                  )
+                )}
+              </div>
+
+              <button
+                onClick={() =>
+                  removeBookMutation.mutate(book.id)
+                }
+                className="mt-3 bg-red-600 px-2 py-1 rounded text-xs"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
